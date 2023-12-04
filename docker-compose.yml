@@ -1,0 +1,10 @@
+version: '3'
+services:
+  engine-decision-frontend:
+    image: engine-decision-frontend:latest
+    ports:
+      - 3000:3000
+  engine-decision-backend:
+    image: engine-decision-backend:latest
+    ports:
+      - 8080:8080
