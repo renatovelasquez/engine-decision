@@ -10,11 +10,16 @@ a decision (negative or positive) and the amount.
 - Docker Compose
 - Currently, only tested on Fedora 39 and IntelliJ IDEA
 
-## How to run:
+## Running using Docker Compose:
 
 - `docker-compose -f docker-compose.yml up`
 
-## API Pages (URLs):
+## Running locally
+
+- Go to Backend [README.md](backend/README.md)
+- Go to Frontend [README.md](frontend/README.md)
+
+## Pages (URLs):
 
 - http://localhost:3000 engine decision form
 
