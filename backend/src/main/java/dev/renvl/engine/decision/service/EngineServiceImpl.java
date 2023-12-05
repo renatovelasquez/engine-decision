@@ -5,6 +5,7 @@ import dev.renvl.engine.decision.dto.EngineResponse;
 import dev.renvl.engine.decision.model.Profile;
 import dev.renvl.engine.decision.model.ProfileType;
 import dev.renvl.engine.decision.repository.ProfileRepository;
+import dev.renvl.engine.decision.utils.ResourceBadRequestException;
 import dev.renvl.engine.decision.utils.ResourceNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +19,6 @@ public class EngineServiceImpl implements EngineService {
     private final ProfileRepository profileRepository;
     private static final Logger log = LoggerFactory.getLogger(EngineServiceImpl.class);
 
-
     public EngineServiceImpl(ProfileRepository profileRepository) {
         this.profileRepository = profileRepository;
     }
@@ -28,10 +28,16 @@ public class EngineServiceImpl implements EngineService {
         EngineResponse engineResponse = new EngineResponse(engineRequest.getPersonalCode());
         Profile profile = profileRepository.getReferenceById(engineResponse.getPersonalCode());
 
-        int MIN_AMOUNT = 2000;
-        int MAX_AMOUNT = 10000;
-        int MIN_PERIOD = engineRequest.getLoanPeriod();
-        int MAX_PERIOD = 60;
+        final int MIN_AMOUNT = 2000;
+        final int MAX_AMOUNT = 10000;
+        int MIN_PERIOD = 12;
+        final int MAX_PERIOD = 60;
+
+        if ((engineRequest.getLoanAmount() < MIN_AMOUNT || MAX_AMOUNT < engineRequest.getLoanAmount()) ||
+                (engineRequest.getLoanPeriod() < MIN_PERIOD || MAX_PERIOD < engineRequest.getLoanPeriod()))
+            throw new ResourceBadRequestException("The request was out of range.");
+
+        MIN_PERIOD = engineRequest.getLoanPeriod();
 
         //Not found credit modifier for the customer
         if (profile.getType().equals(ProfileType.DEBT.name()))
