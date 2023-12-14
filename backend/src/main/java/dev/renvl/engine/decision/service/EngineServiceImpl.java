@@ -26,24 +26,29 @@ public class EngineServiceImpl implements EngineService {
 
     @Override
     public EngineResponse getCalculation(EngineRequest engineRequest) {
-        EngineResponse engineResponse = new EngineResponse(engineRequest.getPersonalCode());
 
-        Profile profile = profileRepository.findById(engineResponse.getPersonalCode())
+        Profile profile = profileRepository.findById(engineRequest.getPersonalCode())
                 .orElseThrow(() -> new NoDataFoundException("No profile found."));
-
-        final int MIN_PERIOD = engineRequest.getLoanPeriod();
 
         //Not found credit modifier for the customer
         if (profile.getType().equals(ProfileType.DEBT.name()))
             throw new UnprocessableEntityException("It's not possible to process due the customer has a Debt.");
 
+        return minimalGapScore(engineRequest.getPersonalCode(), engineRequest.getLoanPeriod(), profile.getCreditModifier());
+    }
+
+    private double score(double creditModifier, int amount, int period) {
+        return (creditModifier / amount) * period;
+    }
+
+    private EngineResponse minimalGapScore(String code, int requestPeriod, double creditModifier) {
         int amount = 0;
         int period = 0;
         double score = Double.MAX_VALUE;
 
         for (int i = MIN_AMOUNT; i <= MAX_AMOUNT; i++) {
-            for (int j = MIN_PERIOD; j <= MAX_PERIOD; j++) {
-                double currentScore = score(profile.getCreditModifier(), i, j);
+            for (int j = requestPeriod; j <= MAX_PERIOD; j++) {
+                double currentScore = score(creditModifier, i, j);
                 if (currentScore >= 1 && Math.abs(currentScore - 1) < Math.abs(score - 1)) {
                     amount = i;
                     period = j;
@@ -51,17 +56,15 @@ public class EngineServiceImpl implements EngineService {
                 }
             }
         }
+        log.info("Customer={} Amount={} Period={} Score={}", code, amount, period, score);
 
         // Final values
-        log.info("Customer={} Amount={} Period={} Score={}", engineRequest.getPersonalCode(), amount, period, score);
-
+        EngineResponse engineResponse = new EngineResponse();
+        engineResponse.setPersonalCode(code);
         engineResponse.setLoanAmount(amount);
         engineResponse.setLoanPeriod(period);
         engineResponse.setMessage("Suitable amount " + amount + " and " + period + " months");
-        return engineResponse;
-    }
 
-    private double score(double creditModifier, int amount, int period) {
-        return (creditModifier / amount) * period;
+        return engineResponse;
     }
 }
