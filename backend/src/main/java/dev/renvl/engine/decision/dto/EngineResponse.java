@@ -48,9 +48,11 @@ public class EngineResponse {
 
     @Override
     public String toString() {
-        return "EngineRequest{" +
+        return "EngineResponse{" +
                 "personalCode='" + personalCode + '\'' +
                 ", loanAmount=" + loanAmount +
+                ", loanPeriod=" + loanPeriod +
+                ", message='" + message + '\'' +
                 '}';
     }
 }
